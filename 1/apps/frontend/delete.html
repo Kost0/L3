@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <title>Title</title>
+</head>
+<body>
+    <div class="container">
+        <h2>Удаление сообщения по id</h2>
+        <form>
+            <div class="form-group">
+                <label for="delete">Введите статус</label>
+                <input type="text" id="delete" name="delete" placeholder="Введите id сообщения">
+            </div>
+        </form>
+
+        <a href="index.html" class="back-link">Вернуться на главную</a>
+    </div>
+
+    <script>
+        import {deleteNotification} from "./script";
+
+        document.querySelector('form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById('delete').value.trim();
+
+            if (!id) {
+                alert('Введите ID уведомления');
+                return;
+            }
+
+            try {
+                await deleteNotification(id);
+                alert('Сообщение удалено');
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+    </script>
+</body>
+</html>

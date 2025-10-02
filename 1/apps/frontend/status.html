@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Статус</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Получение статуса сообщения по id</h2>
+        <form>
+            <div class="form-group">
+                <label for="status">Введите id</label>
+                <input type="text" id="status" name="status" placeholder="Введите id сообщения">
+            </div>
+        </form>
+
+        <a href="index.html" class="back-link">Вернуться на главную</a>
+    </div>
+
+    <script>
+        import {getStatus} from "./script";
+
+        document.querySelector('form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const id = document.getElementById('status').value.trim();
+
+            if (!id) {
+                alert('Введите ID уведомления');
+                return;
+            }
+
+            try {
+                const result = await getStatus(id);
+                alert(result);
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+    </script>
+</body>
+</html>

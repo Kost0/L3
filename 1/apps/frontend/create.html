@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Создание сообщения</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Создать сообщение</h2>
+        <form>
+            <div class="form-group">
+                <label for="message">Текст сообщения</label>
+                <input type="text" id="message" name="message" placeholder="Введите текст сообщения">
+            </div>
+
+            <div class="form-group">
+                <label for="date">Дата и время отправления</label>
+                <input type="datetime-local" id="date" name="date">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" placeholder="example@gmail.com">
+            </div>
+
+            <div class="form-group">
+                <label for="tg">Телеграм:</label>
+                <input type="text" id="tg" name="tg" placeholder="@username">
+            </div>
+
+            <button type="submit">Создать</button>
+        </form>
+
+        <a href="index.html" class="back-link">Вернуться на главную</a>
+    </div>
+
+    <script>
+        import {sendNotification} from "./script";
+
+        document.querySelector('form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormDAta(e.target);
+            const data = {
+                text: formData.get('message'),
+                send_at: formData.get('date'),
+                email: formData.get('email'),
+                tg_user: formData.get('tg')
+            }
+
+            try {
+                const result = await sendNotification(data);
+                alert('Сообзение создано');
+                e.target.reset();
+            } catch (err) {
+                alert(err.message);
+            }
+        });
+    </script>
+</body>
+</html>
