@@ -19,23 +19,32 @@
     </div>
 
     <script>
-        import {deleteNotification} from "./script";
-
-        document.querySelector('form').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        document.querySelector('form').addEventListener('submit', async function(event) {
+            event.preventDefault();
 
             const id = document.getElementById('delete').value.trim();
 
             if (!id) {
-                alert('Введите ID уведомления');
+                alert('Пожалуйста, введите ID сообщения.');
                 return;
             }
 
             try {
-                await deleteNotification(id);
-                alert('Сообщение удалено');
-            } catch (err) {
-                alert(err.message);
+                const response = await fetch(`http://localhost:8080/notify/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('Сообщение успешно удалено!');
+                    document.getElementById('delete').value = ''; // очистить поле
+                } else if (response.status === 404) {
+                    alert('Сообщение с таким ID не найдено.');
+                } else {
+                    alert('Ошибка при удалении сообщения: ' + response.status);
+                }
+            } catch (error) {
+                console.error('Ошибка сети:', error);
+                alert('Не удалось подключиться к серверу.');
             }
         });
     </script>

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/smtp"
 
-	"internal/repository"
+	"github.com/Kost0/L3/internal/repository"
 )
 
 type emailConfig struct {
@@ -22,6 +22,10 @@ func SendNotification(ch <-chan []byte) {
 	go func() {
 		for msg := range ch {
 			notify := &repository.Notify{}
+
+			if _, exist := repository.Deleted[notify.ID]; exist {
+				continue
+			}
 
 			err := json.Unmarshal(msg, notify)
 			if err != nil {

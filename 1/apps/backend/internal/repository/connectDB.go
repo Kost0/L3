@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/wb-go/wbf/dbpg"
+	"github.com/wb-go/wbf/zlog"
 )
 
 func ConnectDB() (*dbpg.DB, error) {
@@ -27,6 +28,8 @@ func ConnectDB() (*dbpg.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	zlog.Logger.Info().Msg("Connected to database: " + dbName)
 
 	return db, nil
 }

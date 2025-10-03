@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 
-	"internal/repository"
+	"github.com/Kost0/L3/internal/repository"
 )
 
 func getChatID(username string, token string) (int64, error) {
@@ -43,7 +44,7 @@ func getChatID(username string, token string) (int64, error) {
 }
 
 func sendTG(notify *repository.Notify) error {
-	token := ""
+	token := os.Getenv("TG_TOKEN")
 
 	chatID, err := getChatID(notify.TGUser, token)
 	if err != nil {

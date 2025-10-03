@@ -36,25 +36,51 @@
     </div>
 
     <script>
-        import {sendNotification} from "./script";
+        document.querySelector('form').addEventListener('submit', async function(event) {
+            event.preventDefault();
 
-        document.querySelector('form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const formData = new FormDAta(e.target);
+            const formData = new FormData(this);
             const data = {
+                id: "",
+                status: "",
                 text: formData.get('message'),
                 send_at: formData.get('date'),
                 email: formData.get('email'),
                 tg_user: formData.get('tg')
+            };
+
+            if (!data.text.trim()) {
+                alert('Пожалуйста, введите текст сообщения.');
+                return;
+            }
+            if (!data.send_at) {
+                alert('Пожалуйста, укажите дату и время отправления.');
+                return;
+            }
+            if (!data.email && !data.tg) {
+                alert('Укажите хотя бы один способ связи: email или Telegram.');
+                return;
             }
 
             try {
-                const result = await sendNotification(data);
-                alert('Сообзение создано');
-                e.target.reset();
-            } catch (err) {
-                alert(err.message);
+                const response = await fetch(`http://localhost:8080/notify`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    alert('Сообщение успешно создано!');
+                    this.reset();
+                } else {
+                    const errorText = await response.text();
+                    alert('Ошибка при создании сообщения: ' + (errorText || response.status));
+                }
+            } catch (error) {
+                console.error('Ошибка сети:', error);
+                alert('Произошла ошибка при подключении к серверу.');
             }
         });
     </script>

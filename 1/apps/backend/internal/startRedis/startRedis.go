@@ -1,6 +1,7 @@
 package startRedis
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 
@@ -8,7 +9,8 @@ import (
 )
 
 func StartRedis() *redis.Client {
-	addr := os.Getenv("REDIS_HOST")
+	port := os.Getenv("REDIS_PORT")
+	addr := fmt.Sprintf("%s:%s", os.Getenv("REDIS_HOST"), port)
 	password := os.Getenv("REDIS_PASSWORD")
 	database, err := strconv.Atoi(os.Getenv("REDIS_DATABASE"))
 	if err != nil {

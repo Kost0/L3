@@ -9,6 +9,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 	"github.com/wb-go/wbf/dbpg"
+	"github.com/wb-go/wbf/zlog"
 )
 
 func RunMigrations(db *dbpg.DB, dbName string) error {
@@ -29,6 +30,8 @@ func RunMigrations(db *dbpg.DB, dbName string) error {
 	if err = m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return fmt.Errorf("could not apply migration: %w", err)
 	}
+
+	zlog.Logger.Info().Msg("migration successfully applied in database: " + dbName)
 
 	return nil
 }

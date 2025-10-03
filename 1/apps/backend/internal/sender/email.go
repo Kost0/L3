@@ -4,7 +4,7 @@ import (
 	"net/smtp"
 	"os"
 
-	"internal/repository"
+	"github.com/Kost0/L3/internal/repository"
 )
 
 func startSMTP() *emailConfig {
