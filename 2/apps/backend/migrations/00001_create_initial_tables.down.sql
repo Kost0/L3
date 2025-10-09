@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS link_following;
+DROP TABLE IF EXISTS link;
