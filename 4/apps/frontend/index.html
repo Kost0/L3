@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Обработка изображений</title>
+</head>
+<body>
+    <h1>Сервис асинхронной обработки изображений</h1>
+
+    <div id="upload-form">
+        <h2>Загрузить изображение</h2>
+        <form id="file-upload-form">
+            <div class="form-group">
+                <label for="imageFile">Выберете изображение</label>
+                <input type="file" id="imageFile" name="imageFile" accept="image/*" required>
+            </div>
+
+            <div>
+                <label>Выберете тип обработки:</label>
+
+                <div class="option-group">
+                    <input type="radio" id="thumbnail" name="processing" value="thumbnail" checked>
+                    <label for="thumbnail" style="display: inline; font-weight: normal">Создать миниатюру (300x300)</label>
+                </div>
+            </div>
+
+            <div class="option-group">
+                <input type="radio" id="resize" name="processing" value="resize">
+                <label for="resize" style="display: inline; font-weight: normal;">Изменить размер</label>
+
+                <div class="size-input" id="sizeInputs" style="display: none">
+                    <input type="number" id="width" placeholder="Ширина" min="1" value="800">
+                    <span></span>
+                    <input type="number" id="height" placeholder="Высота" min="1" value="600">
+                </div>
+
+                <div class="option-group">
+                    <input type="radio" id="watermark" name="processing" value="watermark">
+                    <label for="watermark" style="display: inline; font-weight: normal;">Добавить водяной знак</label>
+                    <input type="text" id="watermarkText" placeholder="Текст водяного знака" style="display: none; margin-top: 5px;">
+                </div>
+            </div>
+
+            <button type="submit">Начать обработку</button>
+        </form>
+    </div>
+
+    <hr>
+
+    <h2>Статус задач</h2>
+    <div id="image-list">
+        <p id="empty-message">Загруженные изображения отсутствуют</p>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080';
+        const imageList = document.getElementById('image-list');
+        const emptyMessage = document.getElementById('empty-message');
+        const tasks = {};
+
+        document.querySelectorAll('input[name="processing"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                document.getElementById('sizeInputs').style.display = e.target.value === 'resize' ? 'flex' : 'none';
+                document.getElementById('watermarkText').style.display = e.target.value === 'watermark' ? 'block' : 'none';
+            })
+        })
+
+        document.getElementById('file-upload-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+
+            const fileInput = document.getElementById('imageFile');
+            const processingType = document.querySelector('input[name="processing"]:checked').value;
+
+            formData.append('imageFile', fileInput.files[0]);
+
+            if (processingType === 'resize') {
+                const width = document.getElementById('width').value;
+                const height = document.getElementById('height').value;
+                formData.append('resize_to', `${width}x${height}`);
+            } else if (processingType === 'watermark') {
+                const watermarkText = document.getElementById('watermarkText').value;
+                if (!watermarkText) {
+                    alert('Введите текст водяного знака');
+                    return;
+                }
+                formData.append('watermark_text', watermarkText);
+            } else {
+                formData.append('gen_thumbnail', 'true');
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error('Ошибка HTTP: ' + response.status + ' - ' + errorText);
+                }
+
+                const data = await response.json();
+                const taskId = data["Photo put in queue"];
+
+                tasks[taskId] = {
+                    id: taskId,
+                    status: "waiting",
+                    processingType: processingType,
+                    processingInfo: getProcessingInfo(processingType)
+                };
+
+                renderImageCard(taskId);
+
+                form.reset();
+                document.getElementById('sizeInputs').style.display = 'none';
+                document.getElementById('watermarkText').style.display = 'none';
+
+                startPolling(taskId);
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                alert('Ошибка при загрузке файла' + error.message)
+            }
+        });
+
+        function getProcessingInfo(type) {
+            switch(type) {
+                case 'resize':
+                    const w = document.getElementById('width').value
+                    const h = document.getElementById('height').value
+                    return `Размер ${w}×${h}`
+                case 'watermark':
+                    const text = document.getElementById('watermarkText').value;
+                    return `Водяной знак: "${text}"`;
+                case 'thumbnail':
+                    return 'Миниатюра: 300×300';
+                default:
+                    return '';
+            }
+        }
+
+        function renderImageCard(taskId) {
+            const task = tasks[taskId];
+            emptyMessage.style.display = 'none';
+
+
+            let card = document.getElementById('card-${taskId}');
+            if (!card) {
+                card = document.createElement('div');
+                card.className = 'image-card'
+                card.id = `card-${taskId}`;
+                imageList.prepend(card);
+            }
+
+            let contentHTML = '';
+
+            if (task.status === 'done' && task.imageUrl) {
+                contentHTML = `<img src="${task.imageUrl}" alt="Обработанное изображение" loading="lazy">`;
+            } else {
+                contentHTML = `<div class="placeholder">${task.status}</div>`;
+            }
+
+            card.innerHTML = `
+                ${contentHTML}
+                <div class="card-footer">
+                    <div>
+                        <strong>ID: ${task.id.substring(0, 8)}...</strong>
+                        <div class="processing-info">${task.proseccingInfo}</div>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <span class="status-badge status-${task.status}">${task.status}</span>
+                        <button class="delete-btn" onclick="deleteImage('${task.id}')" title="Удалить">&times;</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function deleteImage(taskId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/image/${taskId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    delete tasks[taskId];
+                    document.getElementById(`card-${taskId}`).remove();
+
+                    if (Object.keys(tasks).length === 0) {
+                        emptyMessage.style.display = 'block';
+                    }
+                } else {
+                    alert('Ошибка при удалении')
+                }
+            } catch (error) {
+                console.error('Ошибка удаления:', error);
+            }
+        }
+
+        const pollingIntervals = {};
+
+        async function startPolling(taskId) {
+            checkStatus(taskId);
+            pollingIntervals[taskId] = setInterval(() => {
+                checkStatus(taskId);
+            }, 3000)
+        }
+
+        async function checkStatus(taskId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/status/${taskId}`);
+                if (!response.ok) {
+                    throw new Error('Не удалось получить статус');
+                }
+                const data = await response.json();
+
+                tasks[taskId].status = data.status;
+
+                if (data.status === 'done') {
+                    tasks[taskId].imageUrl = `${API_BASE_URL}/image/${taskId}`;
+
+                    renderImageCard(taskId);
+                    clearInterval(pollingIntervals[taskId]);
+                    delete pollingIntervals[taskId];
+                } else if (data.status === 'failed') {
+                    renderImageCard(taskId);
+                    clearInterval(pollingIntervals[taskId]);
+                    delete pollingIntervals[taskId];
+                } else {
+                    renderImageCard(taskId);
+                }   
+            } catch (error) {
+                console.error(`Ошибка опроса задачи ${taskId}:`, error);
+                tasks[taskId].status = 'failed';
+                renderImageCard(taskId);
+                clearInterval(pollingIntervals[taskId]);
+                delete pollingIntervals[taskId];
+            }
+        }
+    </script>
+</body>
+</html>
