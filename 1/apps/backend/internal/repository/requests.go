@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"log"
+	"math"
 	"time"
 
 	"github.com/wb-go/wbf/dbpg"
@@ -12,7 +13,7 @@ import (
 var retryStrategy = retry.Strategy{
 	Attempts: 3,
 	Delay:    time.Second,
-	Backoff:  1.5,
+	Backoff:  math.Exp(1),
 }
 
 var Deleted = make(map[string]struct{})

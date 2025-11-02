@@ -15,6 +15,7 @@ func StartConsumer(ch *rabbitmq.Channel) <-chan []byte {
 	msgs := make(chan []byte)
 
 	go func() {
+		defer close(msgs)
 		err := consumer.Consume(msgs)
 		if err != nil {
 			zlog.Logger.Log().Msg(err.Error())

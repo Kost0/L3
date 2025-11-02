@@ -16,7 +16,7 @@ func main() {
 		panic(err)
 	}
 
-	// Запускаем мирации
+	// Запускаем миграции
 	err = repository.RunMigrations(db, "notifications")
 	if err != nil {
 		panic(err)
@@ -31,7 +31,7 @@ func main() {
 	engine := ginext.New()
 
 	engine.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"http://172.19.0.6:5000"},
+		AllowOrigins: []string{"http://localhost:5000"},
 		AllowMethods: []string{"GET", "POST", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{"Origin", "Accept", "Content-Type"},
 	}))
@@ -42,6 +42,7 @@ func main() {
 
 	engine.GET("/analytics/:short_url/:group", handler.Analytics)
 
+	// Запускаем сервер
 	err = engine.Run(":8080")
 	if err != nil {
 		panic(err)

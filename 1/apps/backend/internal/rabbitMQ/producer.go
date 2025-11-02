@@ -24,19 +24,20 @@ func InitRabbitMQ() (*rabbitmq.Publisher, *rabbitmq.QueueManager, *rabbitmq.Chan
 		if err == nil {
 			break
 		}
+		time.Sleep(100 * time.Millisecond)
 	}
 	if err != nil {
 		panic(err)
 	}
-	
+
 	ch, err := conn.Channel()
 	if err != nil {
 		panic(err)
 	}
 
-	exc := rabbitmq.NewExchange("notifications", "topic")
+	mainExchange := rabbitmq.NewExchange("notification-exchange", "topic")
 
-	err = exc.BindToChannel(ch)
+	err = mainExchange.BindToChannel(ch)
 	if err != nil {
 		panic(err)
 	}
@@ -54,8 +55,11 @@ func InitRabbitMQ() (*rabbitmq.Publisher, *rabbitmq.QueueManager, *rabbitmq.Chan
 	queueName := "allNotifications"
 
 	_, err = manager.DeclareQueue(queueName, queueConfig)
+	if err != nil {
+		panic(err)
+	}
 
-	err = ch.QueueBind(queueName, "#", exc.Name(), false, nil)
+	err = ch.QueueBind(queueName, "#", mainExchange.Name(), false, nil)
 	if err != nil {
 		panic(err)
 	}

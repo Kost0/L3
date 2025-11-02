@@ -67,6 +67,11 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
 
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_FROM: ${SMTP_FROM}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+
       TG_TOKEN: ${TG_TOKEN}
     depends_on:
       postgres:
@@ -88,7 +93,7 @@ services:
   frontend:
     build: ./apps/frontend
     ports:
-      - "5000:80"
+      - "5000:5000"
     depends_on:
       backend:
         condition: service_healthy

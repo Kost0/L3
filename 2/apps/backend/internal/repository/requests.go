@@ -85,7 +85,7 @@ WHERE link.short_url = $1`
 
 	rows, err := db.QueryWithRetry(context.Background(), retryStrategy, query, shortURL)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	defer func() {

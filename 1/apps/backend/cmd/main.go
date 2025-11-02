@@ -26,7 +26,7 @@ func main() {
 	messageChan := rabbitMQ.StartConsumer(ch)
 
 	zlog.Logger.Info().Msg("Consumer started")
-	
+
 	sender.SendNotification(messageChan)
 
 	zlog.Logger.Info().Msg("RabbitMQ started")
@@ -67,7 +67,7 @@ func main() {
 	engine := ginext.New()
 
 	engine.Use(cors.New(cors.Config{
-		AllowOrigins: []string{"http://172.19.0.6:5000"},
+		AllowOrigins: []string{"http://localhost:5000"},
 		AllowMethods: []string{"GET", "POST", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{"Origin", "Accept", "Content-Type"},
 	}))

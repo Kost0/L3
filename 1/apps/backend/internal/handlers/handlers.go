@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Kost0/L3/internal/repository"
+	"github.com/Kost0/L3/internal/sender"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/rabbitmq/amqp091-go"
@@ -86,12 +87,16 @@ func (h *Handler) CreateNotify(c *ginext.Context) {
 		return
 	}
 
-	layout := "2006-01-02T15:04"
-	//         2025-10-03T17:42
+	var timeSendAt time.Time
 
-	timeSendAt, err := time.Parse(layout, newNotify.SendAt)
-	if err != nil || timeSendAt.Before(time.Now()) {
-		c.JSON(http.StatusBadRequest, ginext.H{"error": "Invalid time"})
+	if timeSendAt, err = time.Parse(time.RFC3339, newNotify.SendAt); err != nil {
+		c.JSON(http.StatusBadRequest, ginext.H{"error": err.Error()})
+		return
+	}
+
+	now := time.Now()
+	if timeSendAt.Before(now) {
+		c.JSON(http.StatusBadRequest, ginext.H{"error": "SendAt is in the future"})
 		return
 	}
 
@@ -111,19 +116,25 @@ func (h *Handler) CreateNotify(c *ginext.Context) {
 
 	zlog.Logger.Info().Msg("Redis saved data")
 
-	delay := timeSendAt.Sub(time.Now())
-	ttl := delay.Milliseconds()
+	ttlMs := time.Until(timeSendAt).Milliseconds()
+	if ttlMs <= 0 {
+		c.JSON(http.StatusBadRequest, ginext.H{"error": "Invalid ttl"})
+		return
+	}
 
-	queueName := fmt.Sprintf("delay_%d", ttl)
+	ttl := int32(ttlMs)
+	expires := ttl + 60000
+
+	queueName := fmt.Sprintf("delay_%d", ttlMs)
 
 	args := amqp091.Table{
 		"x-message-ttl":             ttl,
 		"x-dead-letter-exchange":    "notification-exchange",
-		"x-dead-letter-routing-key": "notify-key",
-		"x-expires":                 ttl + 60000,
+		"x-dead-letter-routing-key": "#",
+		"x-expires":                 expires,
 	}
 
-	zlog.Logger.Info().Msg(fmt.Sprintf("%d", delay))
+	zlog.Logger.Info().Msg(fmt.Sprintf("%d", ttl))
 
 	queueConfig := rabbitmq.QueueConfig{
 		Durable:    true,
@@ -158,6 +169,10 @@ func (h *Handler) DeleteNotify(c *ginext.Context) {
 	zlog.Logger.Info().Msg("Deleting notify...")
 
 	id := c.Param("id")
+
+	sender.DeletedMu.Lock()
+	repository.Deleted[id] = struct{}{}
+	sender.DeletedMu.Unlock()
 
 	err := repository.DeleteNotifyByID(id, h.DB)
 	if err != nil {

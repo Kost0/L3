@@ -16,7 +16,7 @@
 
             <div class="form-group">
                 <label for="date">Дата и время отправления</label>
-                <input type="datetime-local" id="date" name="date">
+                <input type="datetime-local" id="date" name="date" step="1">
             </div>
 
             <div class="form-group">
@@ -40,24 +40,34 @@
             event.preventDefault();
 
             const formData = new FormData(this);
+            const rawDate = formData.get('date');
+
+            if (!rawDate) {
+                alert('Пожалуйста, укажите дату и время отправления.');
+                return;
+            }
+
+            const dateObj = new Date(rawDate);
+            if (isNaN(dateObj.getTime())) {
+                alert('Неверный формат даты.');
+                return;
+            }
+            const sendAtRFC3339 = dateObj.toISOString();
+
             const data = {
                 id: "",
                 status: "",
                 text: formData.get('message'),
-                send_at: formData.get('date'),
+                send_at: sendAtRFC3339,
                 email: formData.get('email'),
                 tg_user: formData.get('tg')
             };
 
-            if (!data.text.trim()) {
+            if (!data.text || !data.text.trim()) {
                 alert('Пожалуйста, введите текст сообщения.');
                 return;
             }
-            if (!data.send_at) {
-                alert('Пожалуйста, укажите дату и время отправления.');
-                return;
-            }
-            if (!data.email && !data.tg) {
+            if (!data.email && !data.tg_user) {
                 alert('Укажите хотя бы один способ связи: email или Telegram.');
                 return;
             }
@@ -75,8 +85,8 @@
                     alert('Сообщение успешно создано!');
                     this.reset();
                 } else {
-                    const errorText = await response.text();
-                    alert('Ошибка при создании сообщения: ' + (errorText || response.status));
+                    const txt = await response.text();
+                    alert('Ошибка при создании сообщения: ' + (txt || response.status));
                 }
             } catch (error) {
                 console.error('Ошибка сети:', error);

@@ -46,11 +46,7 @@ func main() {
 	engine := ginext.New("")
 
 	engine.Use(cors.New(cors.Config{
-		AllowOrigins: []string{
-			"http://localhost:5000",
-			"http://172.22.0.7:5000",
-			"http://172.24.0.4:5000",
-		},
+		AllowOrigins: []string{"http://localhost:5000"},
 		AllowMethods: []string{"GET", "POST", "DELETE", "OPTIONS"},
 		AllowHeaders: []string{"Origin", "Accept", "Content-Type"},
 	}))

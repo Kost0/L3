@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/5/apps/backend/migrations/00001_create_initial_tables.down.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/5/apps/backend/migrations/00001_create_initial_tables.up.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/6/apps/backend/migrations/00001_create_initial_tables.down.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/6/apps/backend/migrations/00001_create_initial_tables.up.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/7/apps/backend/migrations/00001_create_initial_tables.down.sql" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/7/apps/backend/migrations/00001_create_initial_tables.up.sql" dialect="GenericSQL" />
+  </component>
+</project>
